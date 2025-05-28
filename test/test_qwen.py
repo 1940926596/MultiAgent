@@ -25,6 +25,3 @@ print(response)
 
 with open('./text/test_qwen.txt', 'w', encoding='utf-8') as f:
     f.write(response)
-
-
-    

@@ -1,4 +1,5 @@
 from agent import FinanceAgent
+from datetime import datetime
 
 
 class AgentGroup:
@@ -7,13 +8,21 @@ class AgentGroup:
         self.agents = agents
         self.history = []
 
+    def _now(self):
+        return datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
     def broadcast(self, message: str):
         """所有 agent 同步接收信息，返回各自的响应。"""
         responses = []
         for agent in self.agents:
             response = agent.chat(f"系统目标：{self.goal}\n你收到一条信息：{message}")
             responses.append((agent.role, response))
-        self.history.append({"type": "broadcast", "message": message, "responses": responses})
+        self.history.append({
+            "type": "broadcast",
+            "timestamp": self._now(),
+            "message": message,
+            "responses": responses
+        })
         return responses
 
     def delegate(self, task: str, agent_role: str):
@@ -21,7 +30,13 @@ class AgentGroup:
         for agent in self.agents:
             if agent.role == agent_role:
                 response = agent.chat(f"你被指派了一个任务：{task}")
-                self.history.append({"type": "delegate", "agent": agent_role, "task": task, "response": response})
+                self.history.append({
+                    "type": "delegate",
+                    "timestamp": self._now(),
+                    "agent": agent_role,
+                    "task": task,
+                    "response": response
+                })
                 return response
         return f"Agent {agent_role} not found."
 
@@ -30,21 +45,30 @@ class AgentGroup:
         manager = next((a for a in self.agents if "经理" in a.role), None)
         if manager is None:
             return "未找到总经理 Agent"
-        # context = "\n".join([f"{h['type']} - {h.get('agent', '所有人')}: {h.get('message') or h.get('task')}" for h in self.history])
-        
+
+        # 构造完整上下文
         context_lines = []
+        context_lines.append(f"系统目标：{self.goal}")
         for h in self.history:
             if h["type"] == "broadcast":
-                context_lines.append(f"[广播] 所有人接收到：{h['message']}")
+                context_lines.append(f"[{h['timestamp']}] 📢 广播：{h['message']}")
                 for role, resp in h["responses"]:
-                    context_lines.append(f"  - {role} 回复：{resp}")
+                    context_lines.append(f"    ↳ {role} 回复：{resp}")
             elif h["type"] == "delegate":
-                context_lines.append(f"[指派] {h['agent']} 接收到任务：{h['task']}")
-                context_lines.append(f"  - {h['agent']} 回复：{h['response']}")
+                context_lines.append(f"[{h['timestamp']}] 📌 指派任务给 {h['agent']}：{h['task']}")
+                context_lines.append(f"    ↳ {h['agent']} 回复：{h['response']}")
+
         context = "\n".join(context_lines)
 
-        decision = manager.chat(f"以下是当前系统中的交流历史：\n{context}\n\n请根据当前情况给出下一步的系统行动建议。")
+        # 提交给总经理人做总结
+        decision = manager.chat(
+            f"以下是当前系统中各专家的交流记录：\n{context}\n\n请你作为总经理人，总结目前信息并提出下一步行动建议。",
+            reset_history=True
+        )
         return decision
+
+
+
 
 
 from transformers import AutoModelForCausalLM, AutoTokenizer
@@ -64,6 +88,7 @@ manager = FinanceAgent(role="总经理人", system_prompt="你是一位总经理
 
 # 放进 AgentGroup 中
 agents = [macro_analyst, risk_controller, asset_advisor, manager]
+# agents = [asset_advisor]
 group = AgentGroup(goal="面对市场波动，给出最优投资建议", agents=agents)
 
 
@@ -81,6 +106,3 @@ print("\n资产配置顾问的回复：\n", response)
 # 让总经理人基于前面记录的交流，进行总结与下一步建议
 decision = group.summarize()
 print("\n总经理人总结与决策：\n", decision)
-
-
-
