@@ -5,7 +5,7 @@ from typing import List, Optional
 
 
 class YahooDownloader:
-    def __init__(self, start_date: str, end_date: str, ticker_list: List[str], save_path: str = "./dataset"):
+    def __init__(self, start_date: str, end_date: str, ticker_list: List[str], save_path: str = "../../datasets"):
         self.start_date = start_date
         self.end_date = end_date
         self.ticker_list = ticker_list
@@ -23,6 +23,7 @@ class YahooDownloader:
                 continue
 
             temp_df.columns = temp_df.columns.get_level_values(0)
+            print(temp_df.columns)
             temp_df["tic"] = tic
             temp_df = temp_df.reset_index()
 
@@ -37,6 +38,7 @@ class YahooDownloader:
                 'tic': temp_df['tic'],
             })
 
+
             new_df["day"] = new_df["date"].dt.dayofweek
             new_df["date"] = new_df["date"].apply(lambda x: x.strftime("%Y-%m-%d"))
 
@@ -47,9 +49,41 @@ class YahooDownloader:
         data_df = data_df.sort_values(by=["date", "tic"]).reset_index(drop=True)
         print("✅ 下载完成，数据维度：", data_df.shape)
 
-        if save_csv:
-            file_path = os.path.join(self.save_path, f"{'_'.join(self.ticker_list)}.csv")
-            data_df.to_csv(file_path, index=False)
-            print(f"📁 数据已保存至 {file_path}")
+        # if save_csv:
+        #     file_path = os.path.join(self.save_path, f"{'_'.join(self.ticker_list)}.csv")
+        #     data_df.to_csv(file_path, index=False)
+        #     print(f"📁 数据已保存至 {file_path}")
 
         return data_df
+
+
+if __name__ == "__main__":
+    downloader = YahooDownloader(
+        start_date="2020-01-01",
+        end_date="2023-12-31",
+        ticker_list=["AAPL", "MSFT", "GOOGL"]
+    )
+
+    df = downloader.fetch_data(proxy="http://127.0.0.1:7890")  # 如果你开了代理
+
+    print(df.head())
+
+
+# filename: download_data.py
+# import yfinance as yf
+# import os
+
+# def download_stock_data(tickers, start_date="2015-01-01", end_date="2024-12-31", save_dir="dataset"):
+#     os.makedirs(save_dir, exist_ok=True)
+
+#     for ticker in tickers:
+#         print(f"正在下载 {ticker} 的数据...")
+#         proxy = "http://127.0.0.1:7890"  # 或 socks5://127.0.0.1:1080
+#         data = yf.download(ticker, start=start_date, end=end_date, proxy=proxy)
+#         file_path = os.path.join(save_dir, f"3.csv")
+#         data.to_csv(file_path)
+#         print(f"{ticker} 的数据已保存到 {file_path}\n")
+
+# if __name__ == "__main__":
+#     stock_list = ["AAPL"]  # 可根据需要改成你关注的股票
+#     download_stock_data(stock_list)
