@@ -5,7 +5,7 @@ from typing import List, Optional
 
 
 class YahooDownloader:
-    def __init__(self, start_date: str, end_date: str, ticker_list: List[str], save_path: str = "../../datasets"):
+    def __init__(self, start_date: str, end_date: str, ticker_list: List[str], save_path: str = "../../datasets/meta"):
         self.start_date = start_date
         self.end_date = end_date
         self.ticker_list = ticker_list
