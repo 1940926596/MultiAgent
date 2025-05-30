@@ -93,7 +93,7 @@ class FeatureEngineer:
 if __name__ == "__main__":
  
     # 读取原始数据
-    df = pd.read_csv("../../datasets/meta/AAPL_MSFT_GOOGL.csv")
+    df = pd.read_csv("../../datasets/meta/2025-01-01/AAPL_MSFT_GOOGL.csv")
     # print("\n索引：", df.index)
 
     # 添加技术指标和Turbulence
@@ -111,7 +111,7 @@ if __name__ == "__main__":
     processed_full = processed_full.sort_values(["date", "tic"]).fillna(0)
 
     
-    file_path = "../../datasets/meta/AAPL_MSFT_GOOGL_processors.csv"
+    file_path = "../../datasets/meta/2025-01-01/AAPL_MSFT_GOOGL_processors.csv"
     processed_full.to_csv(file_path, index=False)
     print(f"📁 数据已保存至 {file_path}")
     

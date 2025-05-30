@@ -49,18 +49,22 @@ class YahooDownloader:
         data_df = data_df.sort_values(by=["date", "tic"]).reset_index(drop=True)
         print("✅ 下载完成，数据维度：", data_df.shape)
 
-        # if save_csv:
-        #     file_path = os.path.join(self.save_path, f"{'_'.join(self.ticker_list)}.csv")
-        #     data_df.to_csv(file_path, index=False)
-        #     print(f"📁 数据已保存至 {file_path}")
+        if save_csv:
+            # 构造路径
+            folder_path = os.path.join(self.save_path, f"{self.start_date}")  # 比如 '../../datasets/meta/2024-08-01_'
+            os.makedirs(folder_path, exist_ok=True)  # 自动创建多级目录（如果已存在不会报错）
+
+            file_path = os.path.join(folder_path, f"{'_'.join(self.ticker_list)}.csv")
+            data_df.to_csv(file_path, index=False)
+            print(f"📁 数据已保存至 {file_path}")
 
         return data_df
 
 
 if __name__ == "__main__":
     downloader = YahooDownloader(
-        start_date="2020-01-01",
-        end_date="2023-12-31",
+        start_date="2025-01-01",
+        end_date="2025-03-31",
         ticker_list=["AAPL", "MSFT", "GOOGL"]
     )
 

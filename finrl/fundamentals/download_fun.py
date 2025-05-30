@@ -72,4 +72,4 @@ def get_fundamentals(ticker: str) -> pd.DataFrame:
 
 tickers = ["AAPL"]
 all_fundamentals = pd.concat([get_fundamentals(tic) for tic in tickers])
-all_fundamentals.to_csv("../../datasets/fundamentals/fundamentals.csv", index=False)
+all_fundamentals.to_csv(f"../../datasets/fundamentals/{tickers[0]}_fundamentals.csv", index=False)
