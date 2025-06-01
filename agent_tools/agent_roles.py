@@ -1,113 +1,87 @@
 # agent_roles.py
-
 from base_agent import BaseFinanceAgent
+from transformers import AutoModelForCausalLM, AutoTokenizer
 
-# 技术分析师
+model_path = "../models/Qwen-4B"  # 替换成你的实际路径
+tokenizer = AutoTokenizer.from_pretrained(model_path, trust_remote_code=True)
+model = AutoModelForCausalLM.from_pretrained(model_path, device_map="auto", trust_remote_code=True)
+
+### 技术分析 Agent
 class TechnicalAnalystAgent(BaseFinanceAgent):
     def analyze(self, data: dict) -> dict:
-        close = data.get("close")
         macd = data.get("macd")
         rsi = data.get("rsi_30")
-        # 这里可以加策略逻辑或模型调用
+        close = data.get("close")
 
-        # 示例逻辑
-        if macd > 0 and rsi < 70:
-            action = "buy"
-            confidence = 0.8
-            reason = "MACD 上穿 0 且 RSI 未超买，短期看涨"
-        else:
-            action = "hold"
-            confidence = 0.5
-            reason = "指标未明显趋势"
+        # 也可以用 prompt 调大模型
+        prompt = f"当前 MACD 值为 {macd}，RSI 为 {rsi}，股价为 {close}。请根据技术指标分析后市趋势，并给出建议（买入、卖出、观望）及理由。"
+        answer = self.llm_chat(prompt)
 
-        return {"action": action, "confidence": confidence, "reasoning": reason}
+        return {"action": "llm", "confidence": 1.0, "reasoning": answer}
 
-
-# 基本面分析师
+### 基本面分析 Agent
 class FundamentalAnalystAgent(BaseFinanceAgent):
     def analyze(self, data: dict) -> dict:
         fields = data.get("all_fields", "")
-        # TODO: 用 NLP 提取财报关键词（如收入/ROE 增长等）
+        prompt = f"以下是公司的部分财报内容：{fields}\n请你判断公司基本面是否良好，并给出投资建议和理由。"
+        answer = self.llm_chat(prompt)
 
-        action = "hold"
-        confidence = 0.6
-        reason = "尚未解析详细财报字段"
+        return {"action": "llm", "confidence": 1.0, "reasoning": answer}
 
-        return {"action": action, "confidence": confidence, "reasoning": reason}
-
-
-# 情绪分析 Agent
+### 情绪分析 Agent
 class SentimentAnalystAgent(BaseFinanceAgent):
     def analyze(self, data: dict) -> dict:
         sentiment = data.get("sentiment", 0)
         news = data.get("news_text", "")
+        prompt = f"新闻内容如下：{news}\n新闻情绪打分为 {sentiment}。请判断市场情绪，并给出投资建议和理由。"
+        answer = self.llm_chat(prompt)
 
-        if sentiment > 0.2:
-            action = "buy"
-            confidence = 0.75
-            reason = "新闻情绪积极，情绪驱动上涨概率大"
-        elif sentiment < -0.2:
-            action = "sell"
-            confidence = 0.75
-            reason = "新闻情绪极度负面，存在下跌风险"
-        else:
-            action = "hold"
-            confidence = 0.5
-            reason = "情绪中性，影响不明显"
+        return {"action": "llm", "confidence": 1.0, "reasoning": answer}
 
-        return {"action": action, "confidence": confidence, "reasoning": reason}
-
-
-# 风控 Agent
+### 风控 Agent
 class RiskControlAgent(BaseFinanceAgent):
     def analyze(self, data: dict) -> dict:
         vix = data.get("vix")
         turbulence = data.get("turbulence")
+        prompt = f"当前 VIX 为 {vix}，市场动荡指标为 {turbulence}。请评估市场风险并给出操作建议。"
+        answer = self.llm_chat(prompt)
 
-        if vix > 25 or turbulence > 120:
-            action = "sell"
-            confidence = 0.9
-            reason = "市场波动率和系统风险过高，应降低风险暴露"
-        else:
-            action = "hold"
-            confidence = 0.6
-            reason = "风险可控，可维持仓位"
+        return {"action": "llm", "confidence": 1.0, "reasoning": answer}
 
-        return {"action": action, "confidence": confidence, "reasoning": reason}
-
-
-# 资产配置 Agent（可选）
-class AssetAllocatorAgent(BaseFinanceAgent):
-    def analyze(self, data: dict) -> dict:
-        # 预留，当前为单资产策略可忽略
-        return {"action": "hold", "confidence": 0.0, "reasoning": "资产配置功能未启用"}
-
-
-# 总决策 CIO Agent
+### CIO 决策 Agent
 class CIOAgent(BaseFinanceAgent):
-    def __init__(self, name: str, role: str, advisors: list):
-        super().__init__(name, role)
-        self.advisors = advisors  # List of other Agent objects
+    def __init__(self, name, role, advisors):
+        super().__init__(name, role, model, tokenizer)
+        self.advisors = advisors
 
     def analyze(self, data: dict) -> dict:
-        decisions = []
-        for agent in self.advisors:
-            result = agent.analyze(data)
-            decisions.append(result)
+        results = []
+        for advisor in self.advisors:
+            results.append(advisor.analyze(data))
 
-        # 简单加权（可以替换为更复杂的策略）
-        scores = {"buy": 0, "hold": 0, "sell": 0}
-        for res in decisions:
-            scores[res["action"]] += res["confidence"]
+        # 简单投票决策
+        votes = {"buy": 0, "sell": 0, "hold": 0, "llm": 0}
+        for res in results:
+            votes[res["action"]] += 1
 
-        action = max(scores, key=scores.get)
+        final_action = max(votes, key=votes.get)
         reasoning = "\n".join(
-            [f"{agent.name}: {res['reasoning']}" for agent, res in zip(self.advisors, decisions)]
+            [f"{a.name}: {res['reasoning']}" for a, res in zip(self.advisors, results)]
         )
 
         return {
-            "action": action,
-            "confidence": scores[action] / len(self.advisors),
-            "reasoning": reasoning,
+            "action": final_action,
+            "confidence": 1.0,
+            "reasoning": reasoning
         }
+
+# 实例化
+tech = TechnicalAnalystAgent("技术分析师", "负责技术指标分析", model, tokenizer)
+fund = FundamentalAnalystAgent("基本面分析师", "负责财报分析", model, tokenizer)
+sent = SentimentAnalystAgent("情绪分析师", "负责舆情分析", model, tokenizer)
+risk = RiskControlAgent("风控专家", "负责风险评估", model, tokenizer)
+
+cio = CIOAgent("CIO", "总决策者", [tech, fund, sent, risk])
+
+agent_list = [tech, fund, sent, risk, cio]
 
