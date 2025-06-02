@@ -8,7 +8,7 @@ class BaseFinanceAgent:
         self.role = role
         self.model = model
         self.tokenizer = tokenizer
-        self.system_prompt = f"你是一个金融分析师，角色是：{role}"
+        self.system_prompt = f"你现在是一个金融分析师，角色是：{role}"
         self.history = [{"role": "system", "content": self.system_prompt}]
 
     def llm_chat(self, prompt, reset_history=False):
@@ -38,6 +38,7 @@ class BaseFinanceAgent:
         match = re.findall(r"<\|im_start\|>assistant\n(.*?)<\|im_end\|>", response, re.DOTALL)
         answer = match[-1].strip() if match else response
         self.history.append({"role": "assistant", "content": answer})
+        print(self.history.__str__())
         return answer
 
     def _format_prompt(self):
