@@ -9,8 +9,7 @@ proxy_port = '7890' # !!!please replace it with your own port
 os.environ['http_proxy'] = f'{proxy_url}:{proxy_port}'
 os.environ['https_proxy'] = f'{proxy_url}:{proxy_port}'
 
-client = OpenAI(api_key='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')
-
+client = OpenAI(api_key = "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")
 response = client.chat.completions.create(
   model="gpt-3.5-turbo",
   messages=[
