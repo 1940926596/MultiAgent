@@ -93,7 +93,7 @@ class FeatureEngineer:
 if __name__ == "__main__":
  
     # 读取原始数据
-    df = pd.read_csv("../../datasets/meta/2025-01-01/AAPL_MSFT_GOOGL.csv")
+    df = pd.read_csv("../../datasets/meta/2022-01-01/AAPL_MSFT_GOOGL.csv")
     # print("\n索引：", df.index)
 
     # 添加技术指标和Turbulence
@@ -110,8 +110,15 @@ if __name__ == "__main__":
     processed_full = processed_full[processed_full["date"].isin(processed["date"])]
     processed_full = processed_full.sort_values(["date", "tic"]).fillna(0)
 
-    
-    file_path = "../../datasets/meta/2025-01-01/AAPL_MSFT_GOOGL_processors.csv"
+    # 确保 processed_full 的日期列是 datetime 类型
+    processed_full['date'] = pd.to_datetime(processed_full['date'])
+
+    # 使用标准日期格式筛选
+    processed_full = processed_full[
+        (processed_full['date'] >= '2024-08-01') & (processed_full['date'] <= '2025-04-01')
+    ]
+
+    file_path = "../../datasets/meta/2022-01-01/AAPL_MSFT_GOOGL_processors.csv"
     processed_full.to_csv(file_path, index=False)
     print(f"📁 数据已保存至 {file_path}")
     
