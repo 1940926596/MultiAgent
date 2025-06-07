@@ -93,7 +93,7 @@ class FeatureEngineer:
 if __name__ == "__main__":
  
     # 读取原始数据
-    df = pd.read_csv("../../datasets/meta/2022-01-01/AAPL_MSFT_GOOGL.csv")
+    df = pd.read_csv("../../datasets/meta/2022-01-01/AAPL_MSFT_GOOGL_AMZN_META_NVDA_TSLA_INTC_JPM_BAC_GS_XOM_CVX_JNJ_PFE_UNH_PG_KO_DIS_WMT.csv")
     # print("\n索引：", df.index)
 
     # 添加技术指标和Turbulence
