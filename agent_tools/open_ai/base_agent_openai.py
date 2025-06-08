@@ -1,9 +1,15 @@
+import os,sys
+
+project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
+if project_root not in sys.path:
+    sys.path.insert(0, project_root)
+
 from openai import OpenAI
 import json
-import my_config  # Your own config file
+from agent_tools.open_ai import my_config
 
 class BaseFinanceAgent:
-    def __init__(self, name: str, role: str, model="gpt-4", function_schema=None, memory_size=5):
+    def __init__(self, name: str, role: str, model="gpt-3.5-turbo", function_schema=None, memory_size=5):
         self.name = name
         self.role = role
         self.model = model
@@ -20,7 +26,9 @@ class BaseFinanceAgent:
 
     def build_history_prompt(self):
         if not self.history or not self.interested_fields:
-            return "No historical data."
+            print("-----------------------------")
+            return ""
+            # return "No historical data."
 
         prompt = "Relevant historical data:\n"
         for h in self.history:
@@ -32,7 +40,7 @@ class BaseFinanceAgent:
         return prompt
 
     def ask_model(self, current_prompt: str) -> dict:
-        full_prompt = self.build_history_prompt() + "\n\nCurrent data:\n" + current_prompt
+        full_prompt = self.build_history_prompt() + "\n\nCurrent input:\n" + current_prompt
 
         messages = [
             {"role": "system", "content": f"You are a financial analyst. Your role is: {self.role}"},
@@ -43,14 +51,11 @@ class BaseFinanceAgent:
             model=self.model,
             messages=messages,
             functions=self.function_schema,
-            function_call={"name": "stock_decision"},
         )
 
         try:
             args = response.choices[0].message.function_call.arguments
             parsed = json.loads(args)
-            parsed.setdefault("buy_amount", 0)
-            parsed.setdefault("sell_amount", 0)
             return parsed
         
         except Exception as e:
@@ -59,7 +64,5 @@ class BaseFinanceAgent:
         return {
             "action": "hold",
             "confidence": 0.5,
-            "reasoning": "Model did not return structured output",
-            "buy_amount": 0,
-            "sell_amount": 0
+            "reasoning": "Model did not return structured output"
         }

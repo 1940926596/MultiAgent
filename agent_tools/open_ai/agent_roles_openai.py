@@ -17,7 +17,7 @@ class TechnicalAnalystAgent(BaseFinanceAgent):
             f"- DMI(dx_30): {data['dx_30']}\n"
             f"- 30-day Moving Average: {data['close_30_sma']}\n"
             f"- 60-day Moving Average: {data['close_60_sma']}\n"
-            "Please judge based on historical trends: buy, sell, or hold? Output action, confidence, reasoning, buy_amount, sell_amount."
+            "Please judge based on historical trends: buy, sell, or hold? Output action, confidence, reasoning."
         )
         return self.ask_model(prompt)
 
@@ -33,7 +33,7 @@ class SentimentAnalystAgent(BaseFinanceAgent):
             f"Below is a summary of news for {data['tic']} on {data['date']} (each includes sentiment and headline):\n\n"
             f"{data['news']}\n\n"
             "Please analyze the potential impact of these news sentiments on the market, judge the recommended action (buy, sell, hold), "
-            "and fill in the following fields: action, confidence, reasoning, buy_amount, sell_amount."
+            "and fill in the following fields: action, confidence, reasoning."
         )
         return self.ask_model(prompt)
 
@@ -64,7 +64,7 @@ class FundamentalAnalystAgent(BaseFinanceAgent):
         prompt = (
             f"{content}"
             "Please judge the company's value and investment potential based on the above information, "
-            "and output action, confidence, reasoning, buy_amount, sell_amount."
+            "and output action, confidence, reasoning."
         )
         return self.ask_model(prompt)
 
@@ -77,20 +77,14 @@ class CIOAgent(BaseFinanceAgent):
 
     def analyze(self, data: dict) -> dict:
         votes = {"buy": 0.0, "sell": 0.0, "hold": 0.0}
-        total_buy = 0
-        total_sell = 0
         reasons = []
 
         for advisor in self.advisors:
             result = advisor.analyze(data)
             action = result.get("action", "hold")
             confidence = result.get("confidence", 0.5)
-            buy_amount = result.get("buy_amount", 0)
-            sell_amount = result.get("sell_amount", 0)
 
             votes[action] += confidence
-            total_buy += buy_amount
-            total_sell += sell_amount
             reasons.append(f"[{advisor.name}]: {result.get('reasoning', 'No reasoning')} (Confidence: {confidence})")
 
         final_action = max(votes, key=votes.get)
@@ -101,8 +95,6 @@ class CIOAgent(BaseFinanceAgent):
             "action": final_action,
             "confidence": final_conf,
             "reasoning": "\n\n".join(reasons),
-            "buy_amount": total_buy if final_action == "buy" else 0,
-            "sell_amount": total_sell if final_action == "sell" else 0
         }
 
 

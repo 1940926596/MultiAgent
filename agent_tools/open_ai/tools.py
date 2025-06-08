@@ -19,14 +19,6 @@ function_schema = [
                 "reasoning": {
                     "type": "string",
                     "description": "Reasoning for the operation"
-                },
-                "buy_amount": {
-                    "type": "integer",
-                    "description": "Number of shares to buy"
-                },
-                "sell_amount": {
-                    "type": "integer",
-                    "description": "Number of shares to sell"
                 }
             },
             "required": ["action", "confidence", "reasoning"]
