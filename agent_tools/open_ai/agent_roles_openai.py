@@ -1,6 +1,6 @@
 import json
 from base_agent_openai import BaseFinanceAgent
-from tools import function_schema
+from tools import function_schema,function_schema1
 import pandas as pd
 
 class TechnicalAnalystAgent(BaseFinanceAgent):
@@ -117,34 +117,44 @@ class MacroAnalystAgent(BaseFinanceAgent):
 # Analyze annual financial report and general public opinion
 class FundamentalAnalystAgent(BaseFinanceAgent):
     def __init__(self, name="Fundamental Analyst"):
-        super().__init__(name=name, role="Judges company value based on financial reports", function_schema=function_schema)
-        self.interested_fields = ["form_type", "all_fields"]
+        super().__init__(
+            name=name,
+            role="Analyzes company fundamentals to assess long-term intrinsic value and financial health",
+            function_schema=function_schema1
+        )
+        self.interested_fields = [
+            "Total Revenue", "Net Income", "EBITDA", "Operating Income", 
+            "R&D", "SG&A", "Total Assets", "Total Liabilities", 
+            "Long Term Debt", "Current Liabilities", "Cash and Equivalents", 
+            "Operating Cash Flow", "Free Cash Flow", "Capital Expenditure"
+        ]
 
     def analyze(self, data: dict) -> dict:
-        self.update_history(data)
-
-        # If there is a financial report on the day, prioritize using the report for analysis
-        if data.get("form_type") and data.get("all_fields"):
-            all_fields_str = json.dumps(data['all_fields'], ensure_ascii=False)
-            summary = all_fields_str[:300] + '...' if len(all_fields_str) > 300 else all_fields_str
-
-            content = (
-                f"- Date: {data.get('date', 'N/A')}\n"
-                f"- Report Type: {data['form_type']}\n"
-                f"- Financial Report Summary: {summary}...\n"
-            )
-            print(content)
-        else:
-            # When there is no specific report or macro summary
-            content = "- No available financial report or macro summary today.\n"
-
         prompt = (
-            f"{content}"
-            "Please judge the company's value and investment potential based on the above information, "
-            "and output action, confidence, reasoning."
-            "Respond by calling the 'stock_decision' function according to the schema."
+            f"Below is a summary of the financial report for {data.get('tic', 'N/A')} on {data.get('date', 'N/A')}:\n\n"
+            f"- Total Revenue: {data.get('Total Revenue', 'N/A')}\n"
+            f"- Net Income: {data.get('Net Income', 'N/A')}\n"
+            f"- EBITDA: {data.get('EBITDA', 'N/A')}\n"
+            f"- Operating Income: {data.get('Operating Income', 'N/A')}\n"
+            f"- R&D Spending: {data.get('R&D', 'N/A')}\n"
+            f"- SG&A Expenses: {data.get('SG&A', 'N/A')}\n"
+            f"- Total Assets: {data.get('Total Assets', 'N/A')}\n"
+            f"- Total Liabilities: {data.get('Total Liabilities', 'N/A')}\n"
+            f"- Long-Term Debt: {data.get('Long Term Debt', 'N/A')}\n"
+            f"- Current Liabilities: {data.get('Current Liabilities', 'N/A')}\n"
+            f"- Cash and Equivalents: {data.get('Cash and Equivalents', 'N/A')}\n"
+            f"- Operating Cash Flow: {data.get('Operating Cash Flow', 'N/A')}\n"
+            f"- Free Cash Flow: {data.get('Free Cash Flow', 'N/A')}\n"
+            f"- Capital Expenditure: {data.get('Capital Expenditure', 'N/A')}\n\n"
+            "Please summarize the company's financial health and long-term growth potential."
+            "Highlight strengths and potential risks from the fundamental perspective, "
+            "but do not make buy/sell recommendations.\n"
+            "Your response should include a financial summary, key insight, and a confidence score (0-1)."
+            "Respond by calling the 'fundamental_summary' function according to the schema."
         )
-        return self.ask_model(prompt)
+        result = self.ask_model(prompt)
+        self.update_history(data)
+        return result
     
 
 
@@ -208,6 +218,16 @@ if __name__ == "__main__":
     results_df.to_csv("cio_analysis_results.csv", index=False)
     print("Multi-agent analysis complete, results saved to: cio_analysis_results.csv")
 
+
     # FundamentalAnalystAgent Deal With
+    fun_df = pd.read_csv("../../datasets/fundamentals/AAPL_fundamentals_enhanced.csv")
+    fun=FundamentalAnalystAgent()
+    fun_results = []
+    for i, row in fun_df.head(3).iterrows():
+        data = row.to_dict()
+        fun_result = fun.analyze(data)
+        fun_results.append(fun_result)
 
-
+    results_df = pd.DataFrame(fun_results)
+    results_df.to_csv("longterm_analysis_results.csv", index=False)
+    print("results saved to: longterm_analysis_results.csv")
