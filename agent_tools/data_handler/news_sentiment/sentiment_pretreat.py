@@ -96,7 +96,7 @@ for idx, row in grouped.iterrows():
 
         results.append({
             "date": row["date"],
-            "summary": result.get("summary"),
+            "news_summary": result.get("news_summary"),
             "overall_sentiment": result.get("overall_sentiment"),
             "key_points": result.get("key_points")
         })

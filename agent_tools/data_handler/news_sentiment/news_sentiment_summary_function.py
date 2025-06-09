@@ -4,7 +4,7 @@ news_sentiment_summary_function = {
     "parameters": {
         "type": "object",
         "properties": {
-            "summary": {
+            "news_summary": {
                 "type": "string",
                 "description": "A concise summary of the key news points and sentiment trends for the day."
             },

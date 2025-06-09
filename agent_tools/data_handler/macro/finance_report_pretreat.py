@@ -7,7 +7,7 @@ if project_root not in sys.path:
     sys.path.insert(0, project_root)
 
 from agent_tools.open_ai.base_agent_openai import BaseFinanceAgent
-from agent_tools.data_handler.finance_report.macro_summary import macro_summary_function
+from agent_tools.data_handler.macro.macro_summary import macro_summary_function
 
 import pandas as pd
 
@@ -59,7 +59,7 @@ for idx, row in df.iterrows():
         result = macro_agent.ask_model(prompt)
         
         # Write results into DataFrame columns
-        df.at[idx, 'macro_summary'] = result.get('summary', '')
+        df.at[idx, 'macro_summary'] = result.get('macro_summary', '')
         df.at[idx, 'risk_tags'] = ', '.join(result.get('risk_tag', []))
         df.at[idx, 'macro_score'] = result.get('macro_score', None)
         
@@ -67,7 +67,7 @@ for idx, row in df.iterrows():
         results.append({
             "date": row["date"],
             "tic": row["tic"],
-            "summary": result.get("summary"),
+            "macro_summary": result.get("macro_summary"),
             "risk_tag": result.get("risk_tag"),
             "macro_score": result.get("macro_score")
         })

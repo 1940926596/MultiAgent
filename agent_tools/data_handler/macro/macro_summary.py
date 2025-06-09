@@ -4,7 +4,7 @@ macro_summary_function = {
     "parameters": {
         "type": "object",
         "properties": {
-            "summary": {
+            "macro_summary": {
                 "type": "string",
                 "description": "A concise summary of the quarterly financial report."
             },

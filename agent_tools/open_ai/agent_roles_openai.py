@@ -10,34 +10,96 @@ class TechnicalAnalystAgent(BaseFinanceAgent):
     def analyze(self, data: dict) -> dict:
         self.update_history(data)
         prompt = (
-            f"- Current Price: {data['close']}\n"
-            f"- MACD: {data['macd']}\n"
-            f"- RSI(30): {data['rsi_30']}\n"
-            f"- CCI(30): {data['cci_30']}\n"
-            f"- DMI(dx_30): {data['dx_30']}\n"
-            f"- 30-day Moving Average: {data['close_30_sma']}\n"
-            f"- 60-day Moving Average: {data['close_60_sma']}\n"
+            f"Below are the market technical indicators for {data['tic']} on {data['date']} \n\n"
+            f"- Current Closing Price: {data['close']}\n"
+            f"- MACD (Moving Average Convergence Divergence): {data['macd']}\n"
+            f"- RSI (30-day Relative Strength Index): {data['rsi_30']}\n"
+            f"- CCI (30-day Commodity Channel Index): {data['cci_30']}\n"
+            f"- DMI (Directional Movement Index, 30-day): {data['dx_30']}\n"
+            f"- 30-day Simple Moving Average: {data['close_30_sma']}\n"
+            f"- 60-day Simple Moving Average: {data['close_60_sma']}\n\n"
             "Please judge based on historical trends: buy, sell, or hold? Output action, confidence, reasoning."
+            "Respond by calling the 'stock_decision' function according to the schema."
         )
         return self.ask_model(prompt)
 
-
-class SentimentAnalystAgent(BaseFinanceAgent):
-    def __init__(self, name="Sentiment Analyst"):
-        super().__init__(name=name, role="Focuses on news and public sentiment changes", function_schema=function_schema)
-        self.interested_fields = ["sentiment", "news_text"]
+class RiskAnalystAgent(BaseFinanceAgent):
+    def __init__(self, name="Risk Analyst"):
+        super().__init__(name=name, role="Focuses on market risks such as volatility and turbulence", function_schema=function_schema)
+        self.interested_fields = ["vix", "turbulence"]
 
     def analyze(self, data: dict) -> dict:
         self.update_history(data)
         prompt = (
-            f"Below is a summary of news for {data['tic']} on {data['date']} (each includes sentiment and headline):\n\n"
-            f"{data['news']}\n\n"
-            "Please analyze the potential impact of these news sentiments on the market, judge the recommended action (buy, sell, hold), "
-            "and fill in the following fields: action, confidence, reasoning."
+            f"- Date: {data.get('date', 'N/A')}\n"
+            f"- VIX (CBOE Volatility Index, reflecting expected market volatility based on S&P 500 options): {data.get('vix', 'N/A')}\n"
+            f"- Market Turbulence Index (A composite risk indicator calculated using asset price volatility and correlation among ~20 major U.S. companies): {data.get('turbulence', 'N/A')}\n"
+            "Based on the above risk indicators, please assess the current risk level of the market. "
+            "Should we take a conservative approach (e.g., hold or sell), or is it safe to buy?\n"
+            "Please output: action, confidence, reasoning."
+            "Respond by calling the 'stock_decision' function according to the schema."
         )
         return self.ask_model(prompt)
+    
+
+class SentimentAnalystAgent(BaseFinanceAgent):
+    def __init__(self, name="Sentiment Analyst"):
+        super().__init__(name=name,role="Focuses on news and public sentiment changes",function_schema=function_schema)
+        self.interested_fields = ["news_summary", "overall_sentiment", "key_points"]
+
+    def analyze(self, data: dict) -> dict:
+        if data.get("news_summary") and data.get("overall_sentiment"):
+            self.update_history(data)
+            prompt = (
+                f"Below is a summary of news for {data['tic']} on {data['date']} \n\n"
+                f"- News Summary (Short text summarizing major recent news about the company): {data.get('news_summary', 'No summary')}\n"
+                f"- News Summary Key Points (Bullet points capturing the most important facts or events mentioned in recent news): {data.get('key_points', 'No key points')}\n"
+                f"- Overall Sentiment (General sentiment score of recent news: Positive / Neutral / Negative): {data.get('overall_sentiment', 'N/A')}\n\n"
+                "Please analyze the impact of recent news and sentiment on the stock's short-term movement. "
+                "Based on the above information, output your investment decision.\n"
+                "And fill in the following fields: action, confidence, reasoning.\n"
+                "Respond by calling the 'stock_decision' function according to the schema."
+            )
+            return self.ask_model(prompt)
+        
+        else:
+            prompt = (
+                f"- No available news and public sentiment for {data['tic']} on {data['date']}\n"
+                "Respond by calling the 'stock_decision' function according to the schema."
+            )
+            return self.ask_model(prompt)
+        
+
+class MacroAnalystAgent(BaseFinanceAgent):
+    def __init__(self, name="Macro Analyst"):
+        super().__init__(name=name, role="Analyzes macroeconomic factors and external environment", function_schema=function_schema)
+        self.interested_fields = ["macro_summary","risk_tags","macro_score"]
+
+    def analyze(self, data: dict) -> dict:
+        if data.get("macro_summary") and data.get("risk_tag"):
+            self.update_history(data)
+            prompt = (
+                f"- Date: {data.get('date', 'N/A')}\n"
+                f"- Macroeconomic Summary (Brief natural language summary of current macroeconomic conditions, based on latest financial indicators and news):\n{data.get('macro_summary', 'No macroeconomic summary available.')}\n"
+                f"- Identified Risk Tags (Pre-classified keywords from 10-K/10-Q risk sections): {', '.join(data.get('risk_tags', [])) or 'None'}\n"
+                f"- Macroeconomic Score (0-1, reflecting overall macroeconomic environment sentiment): {data.get('macro_score', 'N/A')}\n\n"
+                "Based on the macroeconomic conditions, monetary/fiscal policy signals, and global market factors, "
+                "please provide an investment recommendation.\n"
+                "Please output: action, confidence, reasoning."
+                "Respond by calling the 'stock_decision' function according to the schema."
+            )
+            return self.ask_model(prompt)
+        
+        else:
+            prompt = (
+                f"- No available macro_summary and risk_tags for {data['tic']} on {data['date']}\n"
+                "Respond by calling the 'stock_decision' function according to the schema."
+            )
+            return self.ask_model(prompt)
 
 
+
+# Analyze annual financial report and general public opinion
 class FundamentalAnalystAgent(BaseFinanceAgent):
     def __init__(self, name="Fundamental Analyst"):
         super().__init__(name=name, role="Judges company value based on financial reports", function_schema=function_schema)
@@ -59,15 +121,16 @@ class FundamentalAnalystAgent(BaseFinanceAgent):
             print(content)
         else:
             # When there is no specific report or macro summary
-            content = "- No available financial report or macro summary\n"
+            content = "- No available financial report or macro summary today.\n"
 
         prompt = (
             f"{content}"
             "Please judge the company's value and investment potential based on the above information, "
             "and output action, confidence, reasoning."
+            "Respond by calling the 'stock_decision' function according to the schema."
         )
         return self.ask_model(prompt)
-
+    
 
 
 class CIOAgent(BaseFinanceAgent):
@@ -85,7 +148,7 @@ class CIOAgent(BaseFinanceAgent):
             confidence = result.get("confidence", 0.5)
 
             votes[action] += confidence
-            reasons.append(f"[{advisor.name}]: {result.get('reasoning', 'No reasoning')} (Confidence: {confidence})")
+            reasons.append(f"[{advisor.name}]: (action: {action}) {result.get('reasoning', 'No reasoning')} (Confidence: {confidence})")
 
         final_action = max(votes, key=votes.get)
         total_conf = sum(votes.values())
@@ -100,30 +163,34 @@ class CIOAgent(BaseFinanceAgent):
 
 
 # run_analysis
+if __name__ == "__main__":
+    import pandas as pd
+    from agent_roles_openai import TechnicalAnalystAgent, SentimentAnalystAgent, FundamentalAnalystAgent, CIOAgent ,MacroAnalystAgent
 
-import pandas as pd
-from agent_roles_openai import TechnicalAnalystAgent, SentimentAnalystAgent, FundamentalAnalystAgent, CIOAgent
+    # Load data
+    df = pd.read_csv("../../datasets/processed/financial_with_news_macro_summary.csv")
 
-# Load data
-df = pd.read_csv("/data/postgraduates/2024/chenjiarui/Fin/MultiAgents/datasets/processed/financial_final.csv")
 
-# Initialize agents
-tech = TechnicalAnalystAgent()
-sent = SentimentAnalystAgent()
-fund = FundamentalAnalystAgent()
-cio = CIOAgent(advisors=[tech, sent, fund])
+    # Initialize agents
+    tech = TechnicalAnalystAgent()
+    sent = SentimentAnalystAgent()
+    macro = MacroAnalystAgent()
+    risk = RiskAnalystAgent()
 
-# Test on first few rows
-results = []
-for i, row in df.head(3).iterrows():
-    data = row.to_dict()
-    result = cio.analyze(data)
-    # print(result.__str__)
-    result["date"] = data["date"]
-    result["tic"] = data["tic"]
-    results.append(result)
+    cio = CIOAgent(advisors=[tech, sent, macro, risk])
 
-# Save results
-results_df = pd.DataFrame(results)
-results_df.to_csv("cio_analysis_results.csv", index=False)
-print("Multi-agent analysis complete, results saved to: cio_analysis_results.csv")
+    # Test on first few rows
+    results = []
+    for i, row in df.head(3).iterrows():
+        data = row.to_dict()
+        result = cio.analyze(data)
+        # print(result.__str__)
+        result["date"] = data["date"]
+        result["tic"] = data["tic"]
+        results.append(result)
+
+    # Save results
+    results_df = pd.DataFrame(results)
+    results_df.to_csv("cio_analysis_results.csv", index=False)
+    print("Multi-agent analysis complete, results saved to: cio_analysis_results.csv")
+
