@@ -58,7 +58,7 @@ def print_sample_results(df: pd.DataFrame, interval: int = 10):
 
 if __name__ == "__main__":
     # 路径请根据你的环境修改
-    data_path = "/data/postgraduates/2024/chenjiarui/Fin/MultiAgents/datasets/processed/financial_final.csv"
+    data_path = "../datasets/processed/financial_final.csv"
     save_path = "multiagent_analysis_result.csv"
 
     print("📥 正在加载并预处理数据...")

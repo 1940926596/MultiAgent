@@ -20,7 +20,7 @@ def process_all_md_files(md_root):
                 # 用正则找到所有 <DOCUMENT>...</DOCUMENT> 区段
                 documents = re.findall(r"<DOCUMENT>(.*?)</DOCUMENT>", content, re.DOTALL)
 
-                # 寻找 TYPE 是 10-Q 的文档
+                # 寻找 TYPE 是 8-K 的文档
                 for doc in documents:
                     if "<TYPE>8-K" in doc:
                         # 提取该段并保存为 HTML 文件
@@ -31,7 +31,7 @@ def process_all_md_files(md_root):
                         print(f"提取成功！保存为：{output_path}")
                         break
                 else:
-                    print("没有找到 TYPE 为 10-Q 的文档。")    
+                    print("没有找到 TYPE 为 8-K 的文档。")    
 
                 # Step 1: 读取提取好的 HTML 文件
                 html_file = output_path
@@ -65,7 +65,8 @@ def process_all_md_files(md_root):
 
 
 # 修改成你的实际路径
-md_root_dir = '/data/postgraduates/2024/chenjiarui/Fin/MultiAgents/fin/companyForm10QK/sec-edgar-filings/AAPL/8-K'
+md_root_dir = '../sec-edgar-filings/AAPL/8-K'
+# md_root_dir = '../sec-edgar-filings/AAPL/10-Q'
 print(os.path.exists(md_root_dir))  # 应该输出 True
 
 process_all_md_files(md_root_dir)

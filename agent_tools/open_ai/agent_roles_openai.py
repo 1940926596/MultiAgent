@@ -4,7 +4,7 @@ from tools import function_schema
 
 class TechnicalAnalystAgent(BaseFinanceAgent):
     def __init__(self, name="Technical Analyst"):
-        super().__init__(name=name, role="Skilled at judging market trends through technical indicators", function_schema=function_schema)
+        super().__init__(name=name, role="Skilled at judging market trends through technical indicators", function_schema=function_schema, memory_size=10)
         self.interested_fields = ["close", "macd", "rsi_30", "cci_30", "dx_30", "close_30_sma", "close_60_sma"]
 
     def analyze(self, data: dict) -> dict:
@@ -25,7 +25,7 @@ class TechnicalAnalystAgent(BaseFinanceAgent):
 
 class RiskAnalystAgent(BaseFinanceAgent):
     def __init__(self, name="Risk Analyst"):
-        super().__init__(name=name, role="Focuses on market risks such as volatility and turbulence", function_schema=function_schema)
+        super().__init__(name=name, role="Focuses on market risks such as volatility and turbulence", function_schema=function_schema,memory_size=10)
         self.interested_fields = ["vix", "turbulence"]
 
     def analyze(self, data: dict) -> dict:
@@ -44,7 +44,7 @@ class RiskAnalystAgent(BaseFinanceAgent):
 
 class SentimentAnalystAgent(BaseFinanceAgent):
     def __init__(self, name="Sentiment Analyst"):
-        super().__init__(name=name,role="Focuses on news and public sentiment changes",function_schema=function_schema)
+        super().__init__(name=name,role="Focuses on news and public sentiment changes",function_schema=function_schema, memory_size=10)
         self.interested_fields = ["news_summary", "overall_sentiment", "key_points"]
 
     def analyze(self, data: dict) -> dict:
@@ -65,6 +65,7 @@ class SentimentAnalystAgent(BaseFinanceAgent):
         else:
             prompt = (
                 f"- No available news and public sentiment for {data['tic']} on {data['date']}\n"
+                "Please make your judgment based on historical information.\n"
                 "Respond by calling the 'stock_decision' function according to the schema."
             )
             return self.ask_model(prompt)
@@ -94,6 +95,7 @@ class MacroAnalystAgent(BaseFinanceAgent):
         else:
             prompt = (
                 f"- No available macro_summary and risk_tags for {data['tic']} on {data['date']}\n"
+                "Please make your judgment based on historical information.\n"
                 "Respond by calling the 'stock_decision' function according to the schema."
             )
             return self.ask_model(prompt)
@@ -194,4 +196,3 @@ if __name__ == "__main__":
     results_df = pd.DataFrame(results)
     results_df.to_csv("cio_analysis_results.csv", index=False)
     print("Multi-agent analysis complete, results saved to: cio_analysis_results.csv")
-

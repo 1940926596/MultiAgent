@@ -2,7 +2,7 @@ import os
 import re
 
 # 设置路径
-input_path = "/data/postgraduates/2024/chenjiarui/Fin/MultiAgents/fin/companyForm10Q/sec-edgar-filings/AAPL/10-Q/0000320193-25-000008/full-submission.txt"
+input_path = "../sec-edgar-filings/AAPL/10-Q/0000320193-25-000008/full-submission.txt"
 output_path = "AAPL-10Q-2025Q1.html"  # 输出路径可改
 
 
