@@ -25,12 +25,15 @@ class BaseFinanceAgent:
             self.history.pop(0)
 
     def build_history_prompt(self):
-        if not self.history or not self.interested_fields:
-            print("-----------------------------")
+        if not self.history and not self.interested_fields:
             return ""
-            # return "No historical data."
 
         prompt = "Relevant historical data:\n"
+
+        if not self.history:
+            return prompt + "No historical data."
+        
+
         for h in self.history:
             line = f"- Date {h.get('date', '')}"
             for field in self.interested_fields:
@@ -40,7 +43,9 @@ class BaseFinanceAgent:
         return prompt
 
     def ask_model(self, current_prompt: str) -> dict:
-        full_prompt = self.build_history_prompt() + "\n\nCurrent input:\n" + current_prompt
+        full_prompt = self.build_history_prompt() + "\nCurrent input:\n" + current_prompt
+        if self.name=="Macro Analyst":
+            print(full_prompt)
 
         messages = [
             {"role": "system", "content": f"You are a financial analyst. Your role is: {self.role}"},
