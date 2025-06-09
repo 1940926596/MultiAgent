@@ -54,7 +54,7 @@ class SentimentAnalystAgent(BaseFinanceAgent):
         self.interested_fields = ["news_summary", "overall_sentiment", "key_points"]
 
     def analyze(self, data: dict) -> dict:
-        if data.get("news_summary") and data.get("overall_sentiment"):
+        if data.get("news_summary") and data.get("overall_sentiment") and not pd.isna(data.get("news_summary")) and not pd.isna(data.get("overall_sentiment")):
             
             prompt = (
                 f"Below is a summary of news for {data['tic']} on {data['date']} \n\n"
