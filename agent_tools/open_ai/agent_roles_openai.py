@@ -70,6 +70,7 @@ class SentimentAnalystAgent(BaseFinanceAgent):
             return self.ask_model(prompt)
         
 
+# Process 10-Q(Quarterly) and 8-K(Irregular)
 class MacroAnalystAgent(BaseFinanceAgent):
     def __init__(self, name="Macro Analyst"):
         super().__init__(name=name, role="Analyzes macroeconomic factors and external environment", function_schema=function_schema)
