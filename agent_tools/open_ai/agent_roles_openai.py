@@ -1,6 +1,7 @@
 import json
-from base_agent_openai import BaseFinanceAgent
-from tools import function_schema,function_schema1
+from .web_search import search_wikipedia_summary,search_industry_news
+from .base_agent_openai import BaseFinanceAgent
+from .tools import function_schema,function_schema1
 import pandas as pd
 
 class TechnicalAnalystAgent(BaseFinanceAgent):
@@ -130,8 +131,18 @@ class FundamentalAnalystAgent(BaseFinanceAgent):
         ]
 
     def analyze(self, data: dict) -> dict:
+        tic = data.get("tic", "")
+        year = data.get("date", "")[:4]
+
+        # 1. 获取维基百科简介
+        wiki_summary = search_wikipedia_summary(tic)
+
+        # 2. 获取行业新闻摘要
+        industry_news = search_industry_news(tic, year=year)
+
         prompt = (
-            f"Below is a summary of the financial report for {data.get('tic', 'N/A')} on {data.get('date', 'N/A')}:\n\n"
+            f"You are a professional financial analyst. Please analyze the fundamental situation of company {tic} for the year {year}.\n"
+            f"Use the following financial data:\n"
             f"- Total Revenue: {data.get('Total Revenue', 'N/A')}\n"
             f"- Net Income: {data.get('Net Income', 'N/A')}\n"
             f"- EBITDA: {data.get('EBITDA', 'N/A')}\n"
@@ -146,14 +157,19 @@ class FundamentalAnalystAgent(BaseFinanceAgent):
             f"- Operating Cash Flow: {data.get('Operating Cash Flow', 'N/A')}\n"
             f"- Free Cash Flow: {data.get('Free Cash Flow', 'N/A')}\n"
             f"- Capital Expenditure: {data.get('Capital Expenditure', 'N/A')}\n\n"
-            "Please summarize the company's financial health and long-term growth potential."
-            "Highlight strengths and potential risks from the fundamental perspective, "
-            "but do not make buy/sell recommendations.\n"
-            "Your response should include a financial summary, key insight, and a confidence score (0-1)."
-            "Respond by calling the 'fundamental_summary' function according to the schema."
+            f"Additional Information:\n"
+            f"- Wikipedia Summary: {wiki_summary}\n"
+            f"- Industry Trends & News: {industry_news}\n\n"
+            "Now summarize:\n"
+            "1. Financial Summary\n"
+            "2. Company Profile\n"
+            "3. Industry Context\n"
+            "4. Risk Assessment\n"
+            "5. Confidence (0-1)\n\n"
+            "Respond by calling the 'fundamental_analysis_report' function according to the schema."
         )
         result = self.ask_model(prompt)
-        self.update_history(data)
+        # self.update_history(data)
         return result
     
 
@@ -190,7 +206,7 @@ class CIOAgent(BaseFinanceAgent):
 # run_analysis
 if __name__ == "__main__":
     import pandas as pd
-    from agent_roles_openai import TechnicalAnalystAgent, SentimentAnalystAgent, FundamentalAnalystAgent, CIOAgent ,MacroAnalystAgent
+    from agent_roles_openai import TechnicalAnalystAgent, SentimentAnalystAgent, FundamentalAnalystAgent, CIOAgent ,MacroAnalystAgent,RiskAnalystAgent
 
     # Load data
     df = pd.read_csv("../../datasets/processed/financial_with_news_macro_summary.csv")
@@ -226,8 +242,11 @@ if __name__ == "__main__":
     for i, row in fun_df.head(3).iterrows():
         data = row.to_dict()
         fun_result = fun.analyze(data)
+        fun_result["date"] = data["date"]
+        fun_result["tic"] = data["tic"]
         fun_results.append(fun_result)
 
     results_df = pd.DataFrame(fun_results)
+    results_df = results_df.sort_values(by='date')
     results_df.to_csv("longterm_analysis_results.csv", index=False)
     print("results saved to: longterm_analysis_results.csv")

@@ -26,7 +26,7 @@ function_schema = [
     }
 ]
 
-function_schema1 = {
+function_schema1 = [{
     "name": "fundamental_analysis_report",
     "description": "Generates a comprehensive fundamental analysis report of a company based on financial data and external research sources.",
     "parameters": {
@@ -57,4 +57,4 @@ function_schema1 = {
         },
         "required": ["financial_summary", "industry_context", "company_profile", "risk_assessment"]
     }
-}
+}]

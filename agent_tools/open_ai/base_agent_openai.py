@@ -44,8 +44,6 @@ class BaseFinanceAgent:
 
     def ask_model(self, current_prompt: str) -> dict:
         full_prompt = self.build_history_prompt() + "\nCurrent input:\n" + current_prompt
-        if self.name=="Macro Analyst":
-            print(full_prompt)
 
         messages = [
             {"role": "system", "content": f"You are a financial analyst. Your role is: {self.role}"},
