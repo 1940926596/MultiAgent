@@ -68,6 +68,8 @@ from agent_tools.open_ai.agent_roles_openai import TechnicalAnalystAgent, Sentim
 
 # Load data
 df = pd.read_csv("../../datasets/processed/financial_with_news_macro_summary.csv")
+# 增加下一天close列，方便计算reward
+df["close_next"] = df["close"].shift(-1)
 
 # Initialize advisors
 tech = TechnicalAnalystAgent()

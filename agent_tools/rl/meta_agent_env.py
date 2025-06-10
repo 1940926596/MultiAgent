@@ -1,4 +1,4 @@
-# 文件名：meta_agent_env.py
+# File: meta_agent_env.py
 import os
 import sys
 import pandas as pd
@@ -6,11 +6,10 @@ import numpy as np
 import gym
 from gym import spaces
 
+# === Add project root to path ===
 project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
 if project_root not in sys.path:
     sys.path.insert(0, project_root)
-
-from agent_tools.rl.test import MetaAgentRL
 
 class MetaCIOEnv(gym.Env):
     def __init__(self, data, advisors):
@@ -23,9 +22,9 @@ class MetaCIOEnv(gym.Env):
         self.entry_price = 0.0
         self.holding_days = 0
 
-        # === 构造状态空间 ===
+        # === Build observation space ===
         self.extra_features = ["macd", "rsi_30", "cci_30", "vix", "turbulence", "close_30_sma", "close_60_sma"]
-        obs_dim = len(advisors) * 3 + 1 + len(self.extra_features)  # advisor输出 + 持仓状态 + 技术指标
+        obs_dim = len(advisors) * 3 + 1 + len(self.extra_features)  # advisor output + holding state + technical indicators
         self.observation_space = spaces.Box(low=-np.inf, high=np.inf, shape=(obs_dim,), dtype=np.float32)
 
         self.action_space = spaces.Discrete(3)  # 0-buy, 1-hold, 2-sell
@@ -34,7 +33,7 @@ class MetaCIOEnv(gym.Env):
         row = self.data.iloc[self.current_step]
         obs = []
 
-        # === advisor 输出 action/confidence，只有选中那项为confidence，其它为0 ===
+        # === Advisor output (only selected action gets the confidence value) ===
         for name, agent in self.advisors.items():
             result = agent.analyze(row.to_dict())
             action = result["action"]
@@ -42,10 +41,10 @@ class MetaCIOEnv(gym.Env):
             for act in ["buy", "hold", "sell"]:
                 obs.append(confidence if act == action else 0.0)
 
-        # === 当前是否持仓 ===
+        # === Current holding status ===
         obs.append(1.0 if self.holding else 0.0)
 
-        # === 加入额外特征 ===
+        # === Add extra technical features ===
         for feat in self.extra_features:
             obs.append(row.get(feat, 0.0))
 
@@ -64,16 +63,16 @@ class MetaCIOEnv(gym.Env):
         next_price = row.get("close_next", price)
 
         reward = 0.0
-        transaction_cost = 0.001  # 千分之一
+        transaction_cost = 0.001  # 0.1%
 
-        # === buy ===
+        # === Buy ===
         if action == 0 and not self.holding:
             self.holding = True
             self.entry_price = price
             self.holding_days = 0
             reward -= price * transaction_cost
 
-        # === sell ===
+        # === Sell ===
         elif action == 2 and self.holding:
             pnl = (price - self.entry_price) / self.entry_price
             reward += pnl
@@ -82,12 +81,11 @@ class MetaCIOEnv(gym.Env):
             self.entry_price = 0.0
             self.holding_days = 0
 
-        # === still holding ===
+        # === Continue Holding ===
         elif self.holding:
             pnl = (price - self.entry_price) / self.entry_price
-            reward += 0.0  # 不立即计入浮盈
-            reward -= 0.0005  # 时间惩罚（每持有一天扣一点）
-
+            reward += 0.0  # unrealized P&L not counted
+            reward -= 0.0005  # time penalty per day of holding
             self.holding_days += 1
 
         self.current_step += 1
@@ -100,11 +98,7 @@ class MetaCIOEnv(gym.Env):
         print(f"Step: {self.current_step}, Holding: {self.holding}")
 
 
-# === 以下是训练入口 ===
-
-project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
-if project_root not in sys.path:
-    sys.path.insert(0, project_root)
+# === Training Entry Point ===
 
 from agent_tools.open_ai.agent_roles_openai import (
     TechnicalAnalystAgent, SentimentAnalystAgent, FundamentalAnalystAgent,
@@ -121,17 +115,20 @@ advisors = {
     "risk": RiskAnalystAgent()
 }
 
-env = MetaCIOEnv(df.head(200), advisors)
+env = MetaCIOEnv(df.head(2), advisors)
 
 from stable_baselines3 import PPO
 
-# 加入 tensorboard 日志目录
-model = PPO("MlpPolicy", env, verbose=1, tensorboard_log="./tensorboard_logs/")
+# Use tensorboard for logging
+model = PPO("MlpPolicy", env, verbose=1, tensorboard_log="./tensorboard_logs/", device="cpu")
 
-model.learn(total_timesteps=10_000)
-
+# Begin training
+model.learn(total_timesteps=1)
 model.save("meta_cio_rl")
 
+
+# === Testing Phase ===
+env = MetaCIOEnv(df.tail(1).reset_index(drop=True), advisors)
 obs = env.reset()
 done = False
 total_reward = 0
@@ -143,3 +140,68 @@ while not done:
     env.render()
 
 print("Total reward:", total_reward)
+
+
+# === Visualization ===
+import matplotlib.pyplot as plt
+
+env = MetaCIOEnv(df.tail(1).reset_index(drop=True), advisors)
+obs = env.reset()
+done = False
+total_reward = 0
+rewards = []
+portfolio_values = []
+prices = []
+steps = []
+
+cash = 1.0  # initial capital
+holding = 0
+entry_price = 0
+
+while not done:
+    row = env.data.iloc[env.current_step]
+    price = row["close"]
+
+    action, _ = model.predict(obs)
+    obs, reward, done, _ = env.step(action)
+
+    # Update portfolio state
+    if action == 0 and not env.holding:
+        entry_price = price
+        holding = 1
+        cash -= price
+
+    elif action == 2 and env.holding:
+        cash += price
+        holding = 0
+
+    current_value = cash + (price if holding else 0)
+
+    rewards.append(reward)
+    portfolio_values.append(current_value)
+    prices.append(price)
+    steps.append(env.current_step)
+
+    env.render()
+
+print("Total reward:", total_reward)
+
+# === Plot ===
+plt.figure(figsize=(12, 6))
+
+plt.subplot(2, 1, 1)
+plt.plot(steps, portfolio_values, label="Portfolio Value")
+plt.title("Portfolio Value Over Time")
+plt.xlabel("Step")
+plt.ylabel("Value")
+plt.legend()
+
+plt.subplot(2, 1, 2)
+plt.plot(steps, rewards, label="Daily Reward", color="orange")
+plt.title("Daily Reward")
+plt.xlabel("Step")
+plt.ylabel("Reward")
+plt.legend()
+
+plt.tight_layout()
+plt.show()
