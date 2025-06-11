@@ -54,6 +54,7 @@ class BaseFinanceAgent:
             model=self.model,
             messages=messages,
             functions=self.function_schema,
+            function_call={"name": self.function_schema[0]["name"]}
         )
 
         try:
