@@ -13,8 +13,7 @@ if project_root not in sys.path:
 
 
 def precompute_observations(data, advisors):
-    # extra_features = ["macd", "rsi_30", "cci_30", "vix", "turbulence", "close_30_sma", "close_60_sma"]
-    extra_features = []
+    extra_features = ["macd", "rsi_30", "cci_30", "vix", "turbulence", "close_30_sma", "close_60_sma"]
     cached_obs = []
 
     for i in range(len(data)):
@@ -50,10 +49,8 @@ class MetaCIOEnv(gym.Env):
         self.entry_price = 0.0
         self.holding_days = 0
 
-        # self.extra_features = ["macd", "rsi_30", "cci_30", "vix", "turbulence", "close_30_sma", "close_60_sma"]
-        self.extra_features = []
-        # obs_dim = len(advisors) * 3 + 1 + len(self.extra_features)
-        obs_dim = len(advisors) * 3 + 1
+        self.extra_features = ["macd", "rsi_30", "cci_30", "vix", "turbulence", "close_30_sma", "close_60_sma"]
+        obs_dim = len(advisors) * 3 + 1 + len(self.extra_features)
         self.observation_space = spaces.Box(low=-np.inf, high=np.inf, shape=(obs_dim,), dtype=np.float32)
 
         self.action_space = spaces.Discrete(3)  # 0-buy, 1-hold, 2-sell
