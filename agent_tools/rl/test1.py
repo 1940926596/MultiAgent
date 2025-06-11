@@ -61,7 +61,7 @@ class MetaCIOEnv(gym.Env):
 
             holding_index = len(self.advisors) * 3
             obs[holding_index] = 1.0 if self.holding else 0.0
-            return obs[:13]
+            return obs
         else:
             row = self.data.iloc[self.current_step]
             obs = []
@@ -154,14 +154,6 @@ if __name__ == "__main__":
     model.learn(total_timesteps=50000)
     model.save("meta_cio_rl_cached1")
 
-
-
-
-
-
-
-
-
         
     # # === Testing Phase ===
 
@@ -209,4 +201,3 @@ if __name__ == "__main__":
     #     env.render()
 
     # print("Total reward:", total_reward)
-
