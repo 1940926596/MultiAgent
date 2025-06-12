@@ -2,9 +2,13 @@ import json
 import os
 import sys
 
-from web_search import search_wikipedia_summary,search_industry_news
-from base_agent_openai import BaseFinanceAgent
-from tools import function_schema,function_schema1
+project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
+if project_root not in sys.path:
+    sys.path.insert(0, project_root)
+
+from agent_tools.open_ai.web_search import search_wikipedia_summary,search_industry_news
+from agent_tools.open_ai.base_agent_openai import BaseFinanceAgent
+from agent_tools.open_ai.tools import function_schema,function_schema1
 import pandas as pd
 
 class TechnicalAnalystAgent(BaseFinanceAgent):
