@@ -2,13 +2,9 @@ from collections import deque, defaultdict
 import datetime
 import numpy as np
 
-
-# 短期记忆（STM, Short-Term Memory）：存储最近几天（如30天）的市场状态和 Agent 输出，用于当下决策。
-# 长期记忆（LTM, Long-Term Memory）：积累历史表现（如90天或更长），便于总结、趋势判断和未来任务参考。
-
 class MemorySystem:
     def __init__(self, short_term_days=30, long_term_days=90):
-        # 保存每日市场状态和 agent 行为轨迹
+        # Stores daily market states and agent behavior trajectories
         self.market_memory = {}  # {date: market_state}
         self.agent_memory = {}   # {agent: [ {date, market_state, action, reward, confidence}, ... ]}
 
@@ -17,7 +13,7 @@ class MemorySystem:
 
     def log_market_state(self, date, market_data):
         self.market_memory[date] = market_data
-        # 记录每一天的市场特征，如波动率（turbulence）、新闻情绪、技术指标等。
+        # Record daily market features, such as volatility (turbulence), news sentiment, technical indicators, etc.
 
     def log_agent_performance(self, agent, date, action, reward, confidence):
         record = {
@@ -28,12 +24,11 @@ class MemorySystem:
             "confidence": confidence
         }
         self.agent_memory.setdefault(agent, []).append(record)
-        # 为指定 Agent 记录其当天表现：执行的操作（buy/sell/hold）、实际收益（reward）、模型信心值等。
-
+        # Log the agent's performance on a specific day: actions taken (buy/sell/hold), realized reward, model confidence, etc.
 
     def get_agent_memory(self, agent, days=None, since_date=None):
         """
-        获取某个 agent 的短期或长期记忆
+        Retrieve short-term or long-term memory of a specific agent.
         """
         records = self.agent_memory.get(agent, [])
         if since_date:
@@ -42,7 +37,6 @@ class MemorySystem:
             cutoff = datetime.strptime(records[-1]['date'], "%Y-%m-%d") - datetime.timedelta(days=days)
             records = [r for r in records if datetime.strptime(r['date'], "%Y-%m-%d") >= cutoff]
         return records
- 
 
     def get_agent_recent_accuracy(self, agent, days=10):
         memory = self.get_agent_memory(agent, days=days)
