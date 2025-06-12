@@ -1,7 +1,10 @@
 import json
-from .web_search import search_wikipedia_summary,search_industry_news
-from .base_agent_openai import BaseFinanceAgent
-from .tools import function_schema,function_schema1
+import os
+import sys
+
+from web_search import search_wikipedia_summary,search_industry_news
+from base_agent_openai import BaseFinanceAgent
+from tools import function_schema,function_schema1
 import pandas as pd
 
 class TechnicalAnalystAgent(BaseFinanceAgent):
@@ -221,7 +224,7 @@ if __name__ == "__main__":
 
     # Test on first few rows
     results = []
-    for i, row in df.head(3).iterrows():
+    for i, row in df.iterrows():
         data = row.to_dict()
         result = cio.analyze(data)
         # print(result.__str__)
@@ -235,18 +238,19 @@ if __name__ == "__main__":
     print("Multi-agent analysis complete, results saved to: cio_analysis_results.csv")
 
 
-    # FundamentalAnalystAgent Deal With
-    fun_df = pd.read_csv("../../datasets/fundamentals/AAPL_fundamentals_enhanced.csv")
-    fun=FundamentalAnalystAgent()
-    fun_results = []
-    for i, row in fun_df.head(3).iterrows():
-        data = row.to_dict()
-        fun_result = fun.analyze(data)
-        fun_result["date"] = data["date"]
-        fun_result["tic"] = data["tic"]
-        fun_results.append(fun_result)
 
-    results_df = pd.DataFrame(fun_results)
-    results_df = results_df.sort_values(by='date')
-    results_df.to_csv("longterm_analysis_results.csv", index=False)
-    print("results saved to: longterm_analysis_results.csv")
+    # # FundamentalAnalystAgent Deal With
+    # fun_df = pd.read_csv("../../datasets/fundamentals/AAPL_fundamentals_enhanced.csv")
+    # fun=FundamentalAnalystAgent()
+    # fun_results = []
+    # for i, row in fun_df.iterrows():
+    #     data = row.to_dict()
+    #     fun_result = fun.analyze(data)
+    #     fun_result["date"] = data["date"]
+    #     fun_result["tic"] = data["tic"]
+    #     fun_results.append(fun_result)
+
+    # results_df = pd.DataFrame(fun_results)
+    # results_df = results_df.sort_values(by='date')
+    # results_df.to_csv("longterm_analysis_results.csv", index=False)
+    # print("results saved to: longterm_analysis_results.csv")
