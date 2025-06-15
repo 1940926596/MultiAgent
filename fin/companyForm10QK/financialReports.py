@@ -9,14 +9,24 @@ from sec_edgar_downloader import Downloader
 # User-Agent: <Company Name> <Email Address>
 dl = Downloader("MyCompanyName", "my.email@domain.com")
 
-# # 下载最新的两个10-K文件
-# dl.get("10-K", "AAPL", limit=5)
+# 目标股票列表
+symbols = ["TSLA", "GOOG", "NIO", "AMZN", "MSFT", "NFLX", "COIN"]
 
-# 下载最新的两个10-Q文件
-# dl.get("10-Q", "AAPL", limit=20)
+# 下载每种报告类型
+for symbol in symbols:
+    if symbol == "NIO":
+        print(f"\n🌏 {symbol} 是外国公司，下载 20-F 和 6-K")
+        # dl.get("20-F", symbol, limit=20)
+        dl.get("6-K", symbol, limit=200)
 
-# # Get all 8-K filings for Apple (ticker: AAPL)
-dl.get("8-K", "AAPL",limit=20)
+    # print(f"\n🔽 下载中: {symbol} - 10-K")
+    # dl.get("10-K", symbol, limit=20)
+
+    # print(f"🔽 下载中: {symbol} - 10-Q")
+    # dl.get("10-Q", symbol, limit=50)
+
+    # print(f"🔽 下载中: {symbol} - 8-K")
+    # dl.get("8-K", symbol, limit=50)
 
 # # Get all 8-K filings for Apple, including filing amends (8-K/A)
 # dl.get("8-K", "AAPL", include_amends=True)
