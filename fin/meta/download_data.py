@@ -63,7 +63,7 @@ class YahooDownloader:
 
 if __name__ == "__main__":
     downloader = YahooDownloader(
-        start_date="2022-01-01",
+        start_date="2021-01-01",
         end_date="2025-04-01",
         ticker_list = [
     # 科技
@@ -71,7 +71,7 @@ if __name__ == "__main__":
     "JPM", "BAC", "GS",# 能源
     "XOM", "CVX",# 医疗
     "JNJ", "PFE", "UNH",# 消费
-    "PG", "KO", "DIS", "WMT"]
+    "PG", "KO", "DIS", "WMT", "NIO","NFLX","COIN"]
     )
 
     df = downloader.fetch_data(proxy="http://127.0.0.1:7890")  # 如果你开了代理
