@@ -95,7 +95,7 @@ if __name__ == "__main__":
 # /data/postgraduates/2024/chenjiarui/Fin/MultiAgents/datasets/meta/2022-01-01/AAPL_MSFT_GOOGL_AMZN_META_NVDA_TSLA_INTC_JPM_BAC_GS_XOM_CVX_JNJ_PFE_UNH_PG_KO_DIS_WMT_NIO_NFLX_COIN.csv
 
     # 读取原始数据
-    df = pd.read_csv("../../datasets/meta/2021-01-01/AAPL_MSFT_GOOGL_AMZN_META_NVDA_TSLA_INTC_JPM_BAC_GS_XOM_CVX_JNJ_PFE_UNH_PG_KO_DIS_WMT_NIO_NFLX_COIN.csv")
+    df = pd.read_csv("../../datasets/meta/2020-01-01/AAPL_MSFT_GOOGL_AMZN_META_NVDA_TSLA_INTC_JPM_BAC_GS_XOM_CVX_JNJ_PFE_UNH_PG_KO_DIS_WMT_NIO_NFLX_COIN.csv")
     # print("\n索引：", df.index)
 
     # 添加技术指标和Turbulence
@@ -117,10 +117,10 @@ if __name__ == "__main__":
 
     # 使用标准日期格式筛选
     processed_full = processed_full[
-        (processed_full['date'] >= '2021-01-01') & (processed_full['date'] <= '2023-06-10')
+        (processed_full['date'] >= '2020-01-01') & (processed_full['date'] <= '2023-06-10')
     ]
 
-    file_path = "../../datasets/meta/2021-01-01/test_processors.csv"
+    file_path = "../../datasets/meta/2020-01-01/test_processors.csv"
     processed_full.to_csv(file_path, index=False)
     print(f"📁 数据已保存至 {file_path}")
     

@@ -63,7 +63,7 @@ class YahooDownloader:
 
 if __name__ == "__main__":
     downloader = YahooDownloader(
-        start_date="2021-01-01",
+        start_date="2020-01-01",
         end_date="2025-04-01",
         ticker_list = [
     # 科技
