@@ -250,7 +250,6 @@ def process_sentiment_for_stock(stock_dir):
 if __name__ == '__main__':
     base_path = "../../../datasets/processed"
     for folder in os.listdir(base_path):
-        if folder not in {"GOOG", "AAPL", "COIN", "TSLA", "MSFT", "NIO","AMZN"}:
-            folder_path = os.path.join(base_path, folder)
-            if os.path.isdir(folder_path):
-                process_sentiment_for_stock(folder_path)
+        folder_path = os.path.join(base_path, folder)
+        if os.path.isdir(folder_path):
+            process_sentiment_for_stock(folder_path)
